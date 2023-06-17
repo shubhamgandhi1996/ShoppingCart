@@ -1,0 +1,11 @@
+server:
+  port: 8761
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+#    this is used so that the server will not connect with itself
+    register-with-eureka: false
+#    this will tell that its a server and other apps will connect to this
+    fetch-registry: false

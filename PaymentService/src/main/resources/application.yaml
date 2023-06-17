@@ -1,0 +1,47 @@
+server:
+  port: 8081
+
+#mysql config
+spring:
+  datasource:
+    #    it will check if dbhost env. is present it will use that or else localhost
+    url:  jdbc:mysql://${DB_HOST:localhost}:3306/paymentdb
+    username: root
+    password: 1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    database-platform:  org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: update
+  application:
+    name: PAYMENT_SERVICE
+  config:
+    import: optional:configserver:http://localhost:9296
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+
+#  sleuth:
+#    propagation:
+#      type: w3c,b3
+#    supports-join: true
+##  cloud:
+##    compatibility-verifier:
+##      enabled: false
+#
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
+
+##so we need to treat this as a client which should connect to service regisertery server
+#eureka:
+#  instance:
+#    prefer-ip-address: true
+#  client:
+#    fetch-registry: true
+#    register-with-eureka: true
+#    service-url:
+#      defaultZone: ${EUREKA_SERVER_ADDRESS:http://localhost:8761/eureka}
+

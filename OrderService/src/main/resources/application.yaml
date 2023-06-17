@@ -1,0 +1,80 @@
+server:
+  port: 8082
+
+#mysql config
+spring:
+  datasource:
+    #    it will check if dbhost env. is present it will use that or else localhost
+    url:  jdbc:mysql://${DB_HOST:localhost}:3306/orderdb
+    username: root
+    password: 1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    database-platform:  org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: update
+  application:
+    name: ORDER-SERVICE
+  config:
+    import: optional:configserver:http://localhost:9296
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://dev-94506845.okta.com/oauth2/default
+      client:
+        registration:
+#          since we are just going to do internal request so we are registering it as a internal client
+          internal-client:
+            provider: okta
+            authorization-grant-type: client_credentials
+            scope:  internal
+            client-id:  0oa9vwdi8vDGve8SG5d7
+            client-secret:  eJUZ1rN8qHXmX6dzkObjFmLmwx2VVKUuxuVqwms-
+        provider:
+          okta:
+            issuer-uri: https://dev-94506845.okta.com/oauth2/default
+#            so once done then we need to add the web security  filter chain like done in cloud gateway same way we have to do here
+# so we need to add the intercepteres
+#  cloud:
+#    compatibility-verifier:
+#      enabled: false
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
+
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      external:
+        event-consumer-buffer-size: 10
+        failure-rate-threshold: 50
+        minimum-number-of-calls: 5
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 5s
+        permitted-number-of-calls-in-half-open-state: 3
+        sliding-window-size: 10
+        sliding-window-type: count_based
+
+#once we add the okta info in the basic server which is using git i:e git then we need to add conig here so that order service will
+#know what to do -> this will be registered as the client which will behave as a client which will call other services
+#so with the particular info and the scope it can be able to get the data from other service
+
+
+#configserver:http://localhost:9296
+##so we need to treat this as a client which should connect to service regisertery server
+#eureka:
+#  instance:
+#    prefer-ip-address: true
+#  client:
+#    fetch-registry: true
+#    register-with-eureka: true
+#    service-url:
+#      defaultZone: ${EUREKA_SERVER_ADDRESS:http://localhost:8761/eureka}
+

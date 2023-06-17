@@ -1,0 +1,23 @@
+#this will be the staring base image keep it as low size as possible generally alpine os but on top of that we can add
+#linux kernal having the java installed
+FROM    openjdk:17
+#so when we build the app the jar file will get created so that jar file we will copy here so
+#so when we run this jar file the app will start and the tomcat will start and on top of that app will be deployed
+
+ARG JAR_FILE=target/*.jar
+#so any jar file will be picked up
+
+COPY ${JAR_FILE} configserver.jar
+#so here we want to copy the jar file from the variable to the dest. which will be my image name
+
+#if you want to run some commands during the building of image we can mention with {CMD command}
+#but while starting the container the last commnad should be start wit entrypoint
+ENTRYPOINT  ["java", "-jar", "/configserver.jar"]
+#so when container is started we need to exponse the port
+EXPOSE  9296
+
+#mvn clean install
+#now to build this image then we have to run the command docker build -t yourreponame/imagename:tag path of your docker file
+#docker build -t shubhamgandhi/configserver:0.0.1 .
+#docker run -d -p9296:9296 -e EUREKA_SERVER_ADDRESS=http://host.docker.internal:8761/eureka --name configserver imageID
+#so we are passing the env variable

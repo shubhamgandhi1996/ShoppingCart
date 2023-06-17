@@ -1,0 +1,68 @@
+server:
+  port: 9090
+spring:
+  application:
+    name: API-GATEWAY
+  config:
+    import: optional:configserver:http://${CONFIG_SERVER_URL:localhost}:9296
+  cloud:
+    gateway:
+      #        for each service we will create the id and will map the routes to it
+      routes:
+        - id: ORDER-SERVICE
+          uri:
+            lb://ORDER-SERVICE
+          predicates:
+            - Path=/order/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: ORDER-SERVICE
+#                which means we need to create this api so when the order service is down it will forward to this api
+                fallbackuri:  forward:/orderServiceFallBack
+            - name: RequestRateLimiter
+              args:
+#                replinish rate means how many request should be allowed per second
+                redis-rate-limiter.replenishRate: 1
+#                how many req. allowed within the replinish rate i;e in a particular second duration how many request we are allowing
+#                it should not be like for 0.8 sec no request comes and the remaining 0.2 all the req comes
+#                so then it will send the response that too many request sent
+                redis-rate-limiter.burstCapacity: 2
+        - id: PRODUCT-SERVICE
+          uri:
+            lb://PRODUCT-SERVICE
+          predicates:
+            - Path=/product/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: PRODUCT-SERVICE
+                #                which means we need to create this api so when the order service is down it will forward to this api
+                fallbackuri:  forward:/productServiceFallBack
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 1
+                redis-rate-limiter.burstCapacity: 2
+        - id: PAYMENT-SERVICE
+          uri:
+            lb://PAYMENT-SERVICE
+          predicates:
+            - Path=/payment/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: PAYMENT-SERVICE
+                #                which means we need to create this api so when the order service is down it will forward to this api
+                fallbackuri:  forward:/paymentServiceFallBack
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 1
+                redis-rate-limiter.burstCapacity: 2
+okta:
+  oauth2:
+    issuer: https://dev-94506845.okta.com/oauth2/default
+    audience: api://default
+    client-id:  0oa9vwdi8vDGve8SG5d7
+    client-secret:  eJUZ1rN8qHXmX6dzkObjFmLmwx2VVKUuxuVqwms-
+    scopes: openid, profile, email, offline_access, internal
+#we also need to tell the app to authorize the req. for that new package security
